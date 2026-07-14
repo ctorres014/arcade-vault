@@ -23,6 +23,9 @@ npm run lint    # eslint (flat config, eslint.config.mjs)
 
 There is no test runner configured in this project.
 
+## Skills
+Usa siempre /frontend-design para disenar interfaces de usuario
+
 ## Architecture
 
 - App Router lives in `app/`; `app/layout.tsx` is the root layout, `app/page.tsx` the home page.
