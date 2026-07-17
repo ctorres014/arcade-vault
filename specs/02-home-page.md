@@ -1,6 +1,6 @@
 # SPEC 02 — Home page
 
-> **Status:** Aprobado
+> **Status:** Implementado
 > **Depends on:** 01-mvp-visual
 > **Date:** 2026-07-17
 > **Objective:** Reemplazar `/` por la landing de marketing (`home.jsx`), mover la Biblioteca actual a `/games`, y actualizar el Nav para reflejar ambas rutas.
