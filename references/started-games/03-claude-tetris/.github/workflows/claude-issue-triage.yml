@@ -1,0 +1,66 @@
+name: Claude Issue Triage
+
+on:
+  issues:
+    types: [opened, edited]
+
+concurrency:
+  group: claude-issue-triage-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          prompt: |
+            Analiza el issue #${{ github.event.issue.number }} de este repositorio.
+
+            Tu tarea:
+            1. Lee el título y la descripción completa del issue.
+            2. Ejecuta `gh label list` para ver los labels disponibles en el repositorio.
+            3. Decide qué labels son los más apropiados para este issue (por ejemplo:
+               bug, enhancement, documentation, question, duplicate, wontfix,
+               help wanted, good first issue) y aplícalos con
+               `gh issue edit ${{ github.event.issue.number }} --add-label "..."`.
+               Si el issue ya tiene labels que ya no aplican tras la edición,
+               quítalos con `--remove-label`. No crees labels nuevos salvo que
+               sea estrictamente necesario y no exista ninguno equivalente.
+            4. Revisa el código fuente del repositorio (game.js, index.html,
+               style.css) para entender qué partes del juego están
+               probablemente involucradas en el problema descrito. Usa
+               CLAUDE.md como referencia de la arquitectura.
+            5. Publica UN solo comentario en el issue (no dupliques comentarios
+               en ediciones sucesivas: si ya existe un comentario tuyo previo,
+               actualízalo con `gh issue comment --edit-last` en lugar de crear
+               uno nuevo) usando `gh issue comment ${{ github.event.issue.number }}`
+               con un diagnóstico general que incluya:
+               - Un resumen breve del problema.
+               - Las funciones/archivos del código probablemente implicados
+                 (referencias tipo archivo:línea cuando sea posible).
+               - Una hipótesis de causa raíz.
+               - Un enfoque sugerido para solucionarlo, sin implementarlo.
+               El comentario debe estar redactado en formato Markdown válido
+               y bien interpretable por GitHub (usa encabezados, listas,
+               bloques de código con ``` y enlaces tipo archivo:línea donde
+               corresponda).
+            6. No modifiques código ni crees un PR en este workflow: solo
+               analiza, etiqueta y comenta.
+
+          claude_args: |
+            --allowed-tools "Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue comment:*)"
