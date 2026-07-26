@@ -66,10 +66,13 @@ export function AuthProvider({
   const playAsGuest = () => setGuest(true);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setSessionUser(null);
+    // El invitado no tiene sesión en Supabase: basta con apagar el flag.
+    if (sessionUser) {
+      await supabase.auth.signOut();
+      setSessionUser(null);
+      router.refresh();
+    }
     setGuest(false);
-    router.refresh();
   };
 
   const user: SessionUser =
