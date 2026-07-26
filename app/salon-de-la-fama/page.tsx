@@ -90,7 +90,7 @@ export default function HallOfFamePage() {
                 #{String(youRank).padStart(2, "0")}
               </div>
               <div className="pl" style={{ color: "var(--yellow)" }}>
-                {user.name}
+                {user.username}
               </div>
               <div className="sc" style={{ color: "var(--yellow)", textShadow: "0 0 6px rgba(245,255,0,0.5)" }}>
                 {(youScore || 9999).toLocaleString("es-ES")}

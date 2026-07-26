@@ -9,17 +9,16 @@ export default function AuthPage() {
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
   const [email, setEmail] = useState("");
-  const { login } = useAuth();
+  const { playAsGuest } = useAuth();
   const router = useRouter();
 
+  // Se conecta a Supabase en los pasos 9 y 10 del spec.
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    login({ name: (user || "PLAYER1").toUpperCase().slice(0, 10) });
-    router.push("/");
   };
 
-  const playAsGuest = () => {
-    login({ name: "INVITADO" });
+  const enterAsGuest = () => {
+    playAsGuest();
     router.push("/");
   };
 
@@ -80,7 +79,7 @@ export default function AuthPage() {
         <button
           className="btn ghost"
           style={{ width: "100%", marginTop: 10 }}
-          onClick={playAsGuest}
+          onClick={enterAsGuest}
         >
           JUGAR COMO INVITADO
         </button>

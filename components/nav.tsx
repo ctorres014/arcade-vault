@@ -8,7 +8,7 @@ import { useAuth } from "@/context/auth-context";
 export function Nav() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const [open, setOpen] = useState(false);
 
   const isActive = (name: "inicio" | "biblioteca" | "salon" | "about") => {
@@ -55,8 +55,8 @@ export function Nav() {
           <span>CRÉDITOS · 03</span>
         </div>
         {user ? (
-          <button className="btn ghost auth-btn" onClick={logout}>
-            {user.name} ▾
+          <button className="btn ghost auth-btn" onClick={signOut}>
+            {user.username} ▾
           </button>
         ) : (
           <button className="btn auth-btn" onClick={() => router.push("/auth")}>

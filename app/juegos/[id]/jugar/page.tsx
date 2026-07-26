@@ -17,7 +17,7 @@ export default function GamePlayerPage({
 
   if (!game) notFound();
 
-  const name = user ? user.name : "INVITADO";
+  const name = user ? user.username : "INVITADO";
 
   return (
     <div className="av-player fade-in">

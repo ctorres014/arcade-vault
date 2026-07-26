@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Press_Start_2P, Courier_Prime, JetBrains_Mono } from "next/font/google";
 import { AuthProvider } from "@/context/auth-context";
 import { Nav } from "@/components/nav";
+import { createClient } from "@/lib/supabase/server";
+import type { SessionUser } from "@/lib/supabase/types";
 import "./globals.css";
 
 const pressStart2P = Press_Start_2P({
@@ -27,11 +29,39 @@ export const metadata: Metadata = {
   description: "Juega en linea y compite por el puntaje mas alto.",
 };
 
-export default function RootLayout({
+// Resuelve la sesión en el servidor para que el Nav no parpadee al cargar.
+async function getInitialUser(): Promise<SessionUser> {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+
+  if (!claims?.sub) {
+    return null;
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username")
+    .eq("id", claims.sub)
+    .single();
+
+  return {
+    kind: "supabase",
+    id: claims.sub,
+    username:
+      profile?.username ??
+      (claims.email?.split("@")[0] ?? "JUGADOR").toUpperCase().slice(0, 10),
+    email: claims.email ?? "",
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const initialUser = await getInitialUser();
+
   return (
     <html
       lang="en"
@@ -41,7 +71,7 @@ export default function RootLayout({
         <div className="av-bg" />
         <div className="av-noise" />
         <div id="root">
-          <AuthProvider>
+          <AuthProvider initialUser={initialUser}>
             <Nav />
             <main className="av-main">{children}</main>
             <footer
