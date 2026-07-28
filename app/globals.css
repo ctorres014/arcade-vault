@@ -601,6 +601,8 @@ a { color: inherit; text-decoration: none; }
 .hud-stat .v { font-family: var(--pixel); font-size: 16px; color: var(--cyan); text-shadow: 0 0 6px rgba(0,245,255,0.5); }
 .hud-stat.lives .v { color: var(--magenta); text-shadow: 0 0 6px rgba(255,0,110,0.5); }
 .hud-stat.level .v { color: var(--yellow); text-shadow: 0 0 6px rgba(245,255,0,0.5); }
+.hud-stat.triple .l,
+.hud-stat.triple .v { color: var(--green); text-shadow: 0 0 6px rgba(0,255,136,0.5); }
 .hud-actions { display: flex; gap: 10px; }
 
 .crt {
@@ -708,6 +710,25 @@ a { color: inherit; text-decoration: none; }
 .game-arena .e3 { top: 14%; left: 50%; background: var(--yellow); box-shadow: 0 0 8px var(--yellow); animation: drift 2.8s ease-in-out infinite; }
 @keyframes drift {
   50% { transform: translate(20px, 10px); }
+}
+
+/* juego montado en el CRT */
+.game-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #000;
+  image-rendering: pixelated;
+}
+.game-controls {
+  margin-top: 16px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
 }
 
 /* game over modal */
