@@ -109,7 +109,13 @@ export const PLAYERS: string[] = [
   "DROID_X", "RGB_QUEEN", "PIXEL_DAD", "RETROVIRA", "VECTORX", "JOY_STK",
 ];
 
-export type ScoreRow = { rank: number; name: string; score: number; date: string };
+export type ScoreRow = {
+  rank: number;
+  name: string;
+  score: number;
+  date: string;
+  filler: boolean; // true = fila decorativa de seededScores, se pinta atenuada
+};
 
 export function seededScores(seed: number, count = 12): ScoreRow[] {
   let s = seed;
@@ -126,7 +132,13 @@ export function seededScores(seed: number, count = 12): ScoreRow[] {
     const score = base - i * Math.floor(2000 + rand() * 4000);
     const day = String(1 + Math.floor(rand() * 28)).padStart(2, "0");
     const mon = String(1 + Math.floor(rand() * 12)).padStart(2, "0");
-    rows.push({ rank: i + 1, name, score: Math.max(score, 1000), date: `${day}/${mon}/2026` });
+    rows.push({
+      rank: i + 1,
+      name,
+      score: Math.max(score, 1000),
+      date: `${day}/${mon}/2026`,
+      filler: true,
+    });
   }
   return rows.sort((a, b) => b.score - a.score).map((r, i) => ({ ...r, rank: i + 1 }));
 }

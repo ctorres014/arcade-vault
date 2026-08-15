@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { GAMES, seededScores } from "@/lib/games";
+import { GAMES } from "@/lib/games";
+import { createClient } from "@/lib/supabase/server";
+import { fetchGameStats, fetchGameTop, mergeWithFiller } from "@/lib/scores";
 
 export default async function GameDetailPage({
   params,
@@ -11,7 +13,19 @@ export default async function GameDetailPage({
   const game = GAMES.find((g) => g.id === id);
   if (!game) notFound();
 
-  const scores = seededScores(id.length * 17 + 3, 10);
+  const supabase = await createClient();
+  const [top, stats] = await Promise.all([
+    fetchGameTop(supabase, id, 10),
+    fetchGameStats(supabase, id),
+  ]);
+
+  // La semilla del relleno es la de siempre, para que las filas decorativas no
+  // cambien respecto a lo que ya se veía.
+  const scores = mergeWithFiller(top, id.length * 17 + 3, 10);
+
+  // Los valores del catálogo solo se usan mientras el juego no tenga partidas.
+  const plays = stats.plays > 0 ? stats.plays.toLocaleString("es-ES") : game.plays;
+  const best = stats.best ?? game.best;
 
   return (
     <div className="av-detail fade-in">
@@ -31,7 +45,7 @@ export default async function GameDetailPage({
           <div className="stat-strip">
             <div>
               <div className="l">Partidas</div>
-              <div className="v">{game.plays}</div>
+              <div className="v">{plays}</div>
             </div>
             <div>
               <div className="l">Mejor global</div>
@@ -39,7 +53,7 @@ export default async function GameDetailPage({
                 className="v"
                 style={{ color: "var(--magenta)", textShadow: "0 0 6px rgba(255,0,110,0.5)" }}
               >
-                {game.best.toLocaleString("es-ES")}
+                {best.toLocaleString("es-ES")}
               </div>
             </div>
             <div>
@@ -68,8 +82,13 @@ export default async function GameDetailPage({
           <h3>MEJORES PUNTUACIONES</h3>
           {scores.map((r, i) => (
             <div
-              key={r.name}
-              className={"lb-row" + (i === 0 ? " top1" : i === 1 ? " top2" : i === 2 ? " top3" : "")}
+              key={r.rank}
+              className={
+                "lb-row" +
+                (i === 0 ? " top1" : i === 1 ? " top2" : i === 2 ? " top3" : "") +
+                (r.filler ? " is-filler" : "")
+              }
+              aria-label={r.filler ? `${r.name}, puntuación de relleno` : undefined}
             >
               <div className="rk">#{String(r.rank).padStart(2, "0")}</div>
               <div className="pl">
