@@ -469,8 +469,8 @@ a { color: inherit; text-decoration: none; }
   filter: drop-shadow(0 0 6px rgba(0,255,136,0.6));
 }
 
-.cover-rocas { background: radial-gradient(circle at 50% 50%, #0a0a30, #000); }
-.cover-rocas::after {
+.cover-asteroides { background: radial-gradient(circle at 50% 50%, #0a0a30, #000); }
+.cover-asteroides::after {
   content: "";
   position: absolute; inset: 0;
   background:
@@ -481,7 +481,7 @@ a { color: inherit; text-decoration: none; }
     radial-gradient(circle at 12% 70%, var(--cyan) 0 2px, transparent 3px),
     radial-gradient(circle at 60% 20%, var(--cyan) 0 2px, transparent 3px);
 }
-.cover-rocas::before {
+.cover-asteroides::before {
   content: "▲";
   position: absolute; left: 48%; top: 44%;
   color: var(--yellow); font-size: 22px;
@@ -601,6 +601,8 @@ a { color: inherit; text-decoration: none; }
 .hud-stat .v { font-family: var(--pixel); font-size: 16px; color: var(--cyan); text-shadow: 0 0 6px rgba(0,245,255,0.5); }
 .hud-stat.lives .v { color: var(--magenta); text-shadow: 0 0 6px rgba(255,0,110,0.5); }
 .hud-stat.level .v { color: var(--yellow); text-shadow: 0 0 6px rgba(245,255,0,0.5); }
+.hud-stat.triple .l,
+.hud-stat.triple .v { color: var(--green); text-shadow: 0 0 6px rgba(0,255,136,0.5); }
 .hud-actions { display: flex; gap: 10px; }
 
 .crt {
@@ -708,6 +710,25 @@ a { color: inherit; text-decoration: none; }
 .game-arena .e3 { top: 14%; left: 50%; background: var(--yellow); box-shadow: 0 0 8px var(--yellow); animation: drift 2.8s ease-in-out infinite; }
 @keyframes drift {
   50% { transform: translate(20px, 10px); }
+}
+
+/* juego montado en el CRT */
+.game-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #000;
+  image-rendering: pixelated;
+}
+.game-controls {
+  margin-top: 16px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
 }
 
 /* game over modal */
@@ -1279,3 +1300,129 @@ a { color: inherit; text-decoration: none; }
 .term-body .dim { color: var(--ink-dim); }
 .term-body .success { margin-top: 12px; color: var(--green); text-shadow: 0 0 6px rgba(0,255,136,0.45); font-weight: 700; white-space: pre-wrap; }
 .term-body .caret { animation: blink 1s steps(1) infinite; }
+
+/* ===== relleno decorativo de los rankings =====
+   Regla de lectura: en este sitio el neón marca lo que es real. Una marca de
+   jugador va encendida (cian, oro, plata, bronce, con su glow); una fila de
+   relleno lleva el tubo fundido — sin brillo, desaturada y con el sello CPU.
+   La clase va en la fila; el sello lo pone el CSS, así que basta añadirla. */
+.lb-row.is-filler .rk,
+.hall-table .tr.is-filler .rk,
+.top-row.is-filler .tp-rk {
+  color: var(--ink-faint);
+  text-shadow: none;
+}
+.lb-row.is-filler .pl,
+.hall-table .tr.is-filler .pl,
+.top-row.is-filler .tp-p {
+  color: var(--ink-dim);
+  text-shadow: none;
+}
+.lb-row.is-filler .sc,
+.hall-table .tr.is-filler .sc,
+.top-row.is-filler .tp-s {
+  color: var(--ink-dim);
+  text-shadow: none;
+}
+.hall-table .tr.is-filler .dt {
+  color: var(--ink-faint);
+}
+/* El podio del Salón también puede caer en relleno si el juego no tiene
+   partidas reales suficientes. */
+.podium-slot.is-filler {
+  border-color: var(--line-2);
+  box-shadow: none;
+}
+.podium-slot.is-filler .rank-num,
+.podium-slot.is-filler .name,
+.podium-slot.is-filler .score {
+  color: var(--ink-dim);
+  text-shadow: none;
+}
+/* La barra de acento de la portada se apaga con la fila. */
+.top-row.is-filler::before {
+  background: linear-gradient(90deg, rgba(138,143,181,0.06), transparent);
+}
+
+/* Sello CPU, pegado al nombre. El elemento más apagado de la fila: es la
+   etiqueta de lo que no cuenta. */
+.lb-row.is-filler .pl::after,
+.hall-table .tr.is-filler .pl::after,
+.top-row.is-filler .tp-p::after,
+.podium-slot.is-filler .name::after {
+  content: "CPU";
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 4px;
+  border: 1px solid var(--ink-faint);
+  font-family: var(--pixel);
+  font-size: 7px;
+  line-height: 1.4;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
+  vertical-align: middle;
+  text-shadow: none;
+}
+/* En la ficha, .pl apila nombre y fecha: el sello se queda en la línea del
+   nombre y la fecha baja entera. Solo afecta a las filas de relleno. */
+.lb-row.is-filler .pl {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+.lb-row.is-filler .pl::after { order: 2; }
+.lb-row.is-filler .pl > div { order: 3; flex-basis: 100%; }
+
+/* ===== carga del Salón de la Fama =====
+   Reserva su altura siempre, aunque esté vacío: al cambiar de pestaña la tabla
+   no puede dar un salto vertical. */
+.hall-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 18px;
+  margin-bottom: 10px;
+  font-family: var(--pixel);
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  color: var(--ink-faint);
+}
+.hall-loading .dot {
+  width: 6px;
+  height: 6px;
+  background: var(--cyan);
+  box-shadow: 0 0 6px var(--cyan);
+  animation: blink 1s steps(2) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hall-loading .dot { animation: none; }
+}
+
+/* ===== aviso de guardado fallido en el HUD =====
+   Misma gramática que .form-error: el magenta es el color de fallo del sitio. */
+.hud-warn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--magenta);
+  background: rgba(255, 0, 110, 0.08);
+  font-family: var(--pixel);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: var(--magenta);
+  text-shadow: 0 0 6px rgba(255, 0, 110, 0.4);
+}
+.hud-warn .led {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--magenta);
+  box-shadow: 0 0 6px var(--magenta);
+  animation: blink 1.1s steps(2) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud-warn .led { animation: none; }
+}

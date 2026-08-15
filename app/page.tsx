@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { GAMES, type Game } from "@/lib/games";
+import { GAMES, type Game, type ScoreRow } from "@/lib/games";
+import { createClient } from "@/lib/supabase/client";
+import { fetchGlobalTop, mergeWithFiller } from "@/lib/scores";
 
 function useReveal() {
   useEffect(() => {
@@ -225,23 +227,55 @@ const RECENT_SCORES = [
   { p: "NEONFOX", g: "Caída", s: 184220, t: "hace 2 min", c: "magenta" },
   { p: "PX_KAI", g: "Glotón", s: 96400, t: "hace 5 min", c: "yellow" },
   { p: "Z3R0COOL", g: "Invasores", s: 54190, t: "hace 8 min", c: "green" },
-  { p: "VAULT_07", g: "Rocas", s: 41200, t: "hace 12 min", c: "cyan" },
+  { p: "VAULT_07", g: "Asteroides", s: 41200, t: "hace 12 min", c: "cyan" },
   { p: "GLITCHA", g: "Bloque Buster", s: 28450, t: "hace 18 min", c: "cyan" },
   { p: "ARKADYA", g: "Serpentina", s: 7820, t: "hace 24 min", c: "green" },
   { p: "CYBER_LU", g: "Ranaria", s: 18900, t: "hace 31 min", c: "yellow" },
 ];
 
-const TOP_PLAYERS = [
-  { r: 1, p: "NEONFOX", s: 312840 },
-  { r: 2, p: "PX_KAI", s: 248110 },
-  { r: 3, p: "M00NRYU", s: 196720 },
-  { r: 4, p: "VAULT_07", s: 154300 },
-  { r: 5, p: "GLITCHA", s: 138900 },
-];
+const TOP_PLAYERS_SHOWN = 5;
+/** Semilla del relleno de la portada, fija: aquí no hay pestañas. */
+const TOP_PLAYERS_SEED = 5 * 23 + 7;
+
+/**
+ * Top 5 de jugadores por su mejor puntuación individual, con relleno decorativo
+ * por debajo hasta completar las cinco filas de siempre.
+ */
+function useTopPlayers(): ScoreRow[] {
+  const supabase = useMemo(() => createClient(), []);
+  const [top, setTop] = useState<ScoreRow[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchGlobalTop(supabase, TOP_PLAYERS_SHOWN).then((players) => {
+      if (cancelled) return;
+      setTop(
+        players.map((p, i) => ({
+          rank: i + 1,
+          name: p.username,
+          score: p.score,
+          date: "", // la portada no pinta fecha
+          filler: false,
+        }))
+      );
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
+
+  return useMemo(
+    () => mergeWithFiller(top ?? [], TOP_PLAYERS_SEED, TOP_PLAYERS_SHOWN),
+    [top]
+  );
+}
 
 export default function Home() {
   useReveal();
   const router = useRouter();
+  const topPlayers = useTopPlayers();
 
   return (
     <div className="home fade-in">
@@ -363,17 +397,22 @@ export default function Home() {
               </button>
             </div>
             <div className="top-list">
-              {TOP_PLAYERS.map((r, i) => (
+              {topPlayers.map((r, i) => (
                 <div
-                  key={i}
-                  className={"top-row" + (i === 0 ? " top1" : i === 1 ? " top2" : i === 2 ? " top3" : "")}
+                  key={r.rank}
+                  className={
+                    "top-row" +
+                    (i === 0 ? " top1" : i === 1 ? " top2" : i === 2 ? " top3" : "") +
+                    (r.filler ? " is-filler" : "")
+                  }
+                  aria-label={r.filler ? `${r.name}, puntuación de relleno` : undefined}
                 >
-                  <span className="tp-rk">#{String(r.r).padStart(2, "0")}</span>
+                  <span className="tp-rk">#{String(r.rank).padStart(2, "0")}</span>
                   <span className="tp-bar">
                     <span className="tp-fill" style={{ width: 100 - i * 16 + "%" }}></span>
                   </span>
-                  <span className="tp-p">{r.p}</span>
-                  <span className="tp-s">{r.s.toLocaleString("es-ES")}</span>
+                  <span className="tp-p">{r.name}</span>
+                  <span className="tp-s">{r.score.toLocaleString("es-ES")}</span>
                 </div>
               ))}
             </div>

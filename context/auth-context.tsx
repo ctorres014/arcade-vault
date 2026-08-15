@@ -1,25 +1,85 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import type { SessionUser } from "@/lib/supabase/types";
 
-export type SessionUser = { name: string } | null;
+export type { SessionUser };
 
 type AuthContextValue = {
   user: SessionUser;
-  login: (user: SessionUser) => void;
-  logout: () => void;
+  playAsGuest: () => void;
+  signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<SessionUser>(null);
+export function AuthProvider({
+  initialUser = null,
+  children,
+}: {
+  initialUser?: SessionUser;
+  children: ReactNode;
+}) {
+  const supabase = useMemo(() => createClient(), []);
+  const router = useRouter();
+  const [sessionUser, setSessionUser] = useState<SessionUser>(initialUser);
+  const [guest, setGuest] = useState(false);
 
-  const login = (user: SessionUser) => setUser(user);
-  const logout = () => setUser(null);
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const authUser = session?.user;
+
+      if (!authUser) {
+        setSessionUser(null);
+        return;
+      }
+
+      // No se puede llamar a supabase dentro del callback (bloquea el cliente):
+      // se difiere a un tick posterior.
+      setTimeout(async () => {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("id", authUser.id)
+          .single();
+
+        setSessionUser({
+          kind: "supabase",
+          id: authUser.id,
+          username:
+            profile?.username ??
+            (authUser.email?.split("@")[0] ?? "JUGADOR").toUpperCase().slice(0, 10),
+          email: authUser.email ?? "",
+        });
+        // Una sesión real siempre gana sobre el modo invitado.
+        setGuest(false);
+      }, 0);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  const playAsGuest = () => setGuest(true);
+
+  const signOut = async () => {
+    // El invitado no tiene sesión en Supabase: basta con apagar el flag.
+    if (sessionUser) {
+      await supabase.auth.signOut();
+      setSessionUser(null);
+      router.refresh();
+    }
+    setGuest(false);
+  };
+
+  const user: SessionUser =
+    sessionUser ?? (guest ? { kind: "guest", username: "INVITADO" } : null);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, playAsGuest, signOut }}>
       {children}
     </AuthContext.Provider>
   );
