@@ -6,8 +6,8 @@ import { notFound } from "next/navigation";
 import { GAMES } from "@/lib/games";
 import { useAuth } from "@/context/auth-context";
 import { createClient } from "@/lib/supabase/client";
-import { Asteroides, AsteroidesControls } from "@/components/games/asteroides";
-import type { GameSnapshot, GameStatus } from "@/lib/games/asteroides/types";
+import { PLAYABLE } from "@/lib/games/registry";
+import type { PlayedSnapshot, PlayedStatus } from "@/lib/games/types";
 import type { SessionUser } from "@/lib/supabase/types";
 
 export default function GamePlayerPage({
@@ -18,16 +18,16 @@ export default function GamePlayerPage({
   const { id } = use(params);
   const game = GAMES.find((g) => g.id === id);
   const { user } = useAuth();
-  const [snapshot, setSnapshot] = useState<GameSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<PlayedSnapshot | null>(null);
   const [saveFailed, setSaveFailed] = useState(false);
 
   const supabase = useMemo(() => createClient(), []);
 
   // El guardado vive aquí, no en el componente del juego: la página ya recibe el
-  // snapshot y ya conoce al usuario, y Asteroides sigue sin saber que Supabase
+  // snapshot y ya conoce al usuario, y los juegos siguen sin saber que Supabase
   // existe. Todo en refs porque esto se lee desde el callback del motor, fuera
   // del ciclo de render.
-  const statusRef = useRef<GameStatus>("ready");
+  const statusRef = useRef<PlayedStatus>("ready");
   const startedAtRef = useRef<number | null>(null);
   const savedRef = useRef(false);
   const userRef = useRef<SessionUser>(user);
@@ -37,7 +37,7 @@ export default function GamePlayerPage({
   }, [user]);
 
   const handleSnapshot = useCallback(
-    (next: GameSnapshot) => {
+    (next: PlayedSnapshot) => {
       const prev = statusRef.current;
       statusRef.current = next.status;
       setSnapshot(next);
@@ -91,13 +91,14 @@ export default function GamePlayerPage({
   if (!game) notFound();
 
   const name = user ? user.username : "INVITADO";
-  const isPlayable = game.id === "asteroides";
+  // El registro decide si hay juego que montar: la página no conoce ningún id.
+  const playable = PLAYABLE[game.id];
 
   // Sin juego montado el HUD conserva los valores decorativos de siempre.
   const score = snapshot?.score ?? 0;
   const lives = snapshot?.lives ?? 3;
   const level = snapshot?.level ?? 1;
-  const tripleShotLeft = snapshot?.tripleShotLeft ?? 0;
+  const extraStats = snapshot ? playable?.extraStats?.(snapshot) ?? [] : [];
 
   return (
     <div className="av-player fade-in">
@@ -123,12 +124,15 @@ export default function GamePlayerPage({
             <div className="l">Nivel</div>
             <div className="v">{String(level).padStart(2, "0")}</div>
           </div>
-          {tripleShotLeft > 0 && (
-            <div className="hud-stat triple">
-              <div className="l">3x</div>
-              <div className="v">{tripleShotLeft.toFixed(1)}s</div>
+          {extraStats.map((stat) => (
+            <div
+              key={stat.label}
+              className={`hud-stat ${stat.className ?? ""}`.trim()}
+            >
+              <div className="l">{stat.label}</div>
+              <div className="v">{stat.value}</div>
             </div>
-          )}
+          ))}
         </div>
         {saveFailed && (
           <div className="hud-warn" role="status">
@@ -148,8 +152,8 @@ export default function GamePlayerPage({
 
       <div className="crt">
         <div className="crt-screen">
-          {isPlayable ? (
-            <Asteroides onSnapshot={handleSnapshot} />
+          {playable ? (
+            <playable.Game onSnapshot={handleSnapshot} />
           ) : (
             <div className="game-arena">
               <div className="grid-floor"></div>
@@ -167,7 +171,7 @@ export default function GamePlayerPage({
         </div>
       </div>
 
-      {isPlayable && <AsteroidesControls />}
+      {playable && <playable.Controls />}
     </div>
   );
 }

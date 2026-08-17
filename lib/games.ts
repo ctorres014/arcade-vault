@@ -26,7 +26,7 @@ export const GAMES: Game[] = [
     id: "caida",
     title: "CAÍDA",
     short: "Encaja las piezas antes de que el techo te aplaste.",
-    long: "Piezas geométricas descienden desde la oscuridad. Rótalas, encástralas y limpia líneas para sobrevivir. La velocidad aumenta sin piedad cada 10 líneas.",
+    long: "Piezas geométricas descienden desde la oscuridad. Rótalas, encástralas y limpia líneas para sobrevivir. Entre las siete formas de siempre se cuela la tuerca: un bloque de 3×3 con el centro hueco que ningún encaje rellena y que te obligará a replantear el tablero. La velocidad aumenta sin piedad cada 10 líneas.",
     cat: "PUZZLE",
     cover: "cover-tetro",
     color: "magenta",
