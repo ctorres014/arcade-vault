@@ -1,6 +1,6 @@
 # SPEC 08 — Arkanoid en la plataforma
 
-> **Status:** Borrador
+> **Status:** Aprobado
 > **Depends on:** 05-asteroides-jugable, 06-leaderboard-y-tabla-de-juegos, 07-tetris
 > **Date:** 2026-08-18
 > **Objective:** Portar el Arkanoid de `references/started-games/04-arkanoid` a `lib/games/arkanoid/`, montarlo en `/juegos/arkanoid/jugar` como tercera entrada del registro de juegos jugables, y renombrar el id `bloque-buster` del catálogo a `arkanoid`.

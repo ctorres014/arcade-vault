@@ -1,6 +1,8 @@
 import type { ComponentType } from "react";
+import { Arkanoid, ArkanoidControls } from "@/components/games/arkanoid";
 import { Asteroides, AsteroidesControls } from "@/components/games/asteroides";
 import { Caida, CaidaControls } from "@/components/games/caida";
+import type { GameSnapshot as ArkanoidSnapshot } from "@/lib/games/arkanoid/types";
 import type { GameSnapshot as AsteroidesSnapshot } from "@/lib/games/asteroides/types";
 import type { GameSnapshot as CaidaSnapshot } from "@/lib/games/caida/types";
 import type { HudStat, PlayedSnapshot } from "@/lib/games/types";
@@ -30,6 +32,11 @@ export function definePlayable<S extends PlayedSnapshot>(entry: {
 }
 
 export const PLAYABLE: Record<string, PlayableGame> = {
+  // Sin `extraStats`: el HUD base ya enseña todo lo que Arkanoid tiene.
+  arkanoid: definePlayable<ArkanoidSnapshot>({
+    Game: Arkanoid,
+    Controls: ArkanoidControls,
+  }),
   asteroides: definePlayable<AsteroidesSnapshot>({
     Game: Asteroides,
     Controls: AsteroidesControls,
