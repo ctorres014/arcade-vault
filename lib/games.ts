@@ -12,10 +12,10 @@ export type Game = {
 
 export const GAMES: Game[] = [
   {
-    id: "bloque-buster",
-    title: "BLOQUE BUSTER",
+    id: "arkanoid",
+    title: "ARKANOID",
     short: "Rebota la pelota y destruye muros de neón.",
-    long: "Pilota una nave-paleta y rebota un núcleo de plasma para pulverizar muros de bloques cromáticos. Cada nivel reorganiza la grilla en patrones imposibles. ¿Hasta dónde llegará tu racha?",
+    long: "Pilota una nave-paleta y rebota un núcleo de plasma para pulverizar muros de bloques cromáticos. Cinco niveles, cinco patrones: la grilla completa, los huecos alternos, la pirámide, el diamante y el marco hueco. Tienes tres vidas y la bola acelera en cada nivel. Superar el quinto es ganar.",
     cat: "ARCADE",
     cover: "cover-bricks",
     color: "cyan",
